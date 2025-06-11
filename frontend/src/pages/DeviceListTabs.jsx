@@ -1,3 +1,4 @@
+//#/pages/DeviceListTabs.jsx
 import React, { useState } from 'react';
 import DeviceList from './DeviceList';
 import { X, RefreshCcw } from 'lucide-react';

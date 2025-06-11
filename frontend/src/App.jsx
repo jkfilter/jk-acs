@@ -36,23 +36,25 @@ function App() {
         
         <Route path="*" element={<h3>صفحه مورد نظر یافت نشد!</h3>} />
       
-        <Route 
-            path="/acs/*" // از * برای مدیریت روت‌های فرزند توسط AcsLayout استفاده می‌کنیم
+          {/* مسیر والد برای ماژول ACS */}
+          <Route 
+            path="acs"
             element={
-                <ProtectedRoute requiredPermission="acs:view_details"> {/* یا acs:view_details اگر آن را ساختید */}
-                    <DeviceListTabs />
-                </ProtectedRoute>
-            } 
-        />
-
-        <Route 
-            path="acs/device/:deviceId" 
+              <ProtectedRoute requiredPermission="acs:view_details">
+                {/* کامپوننت والد باید شامل <Outlet /> باشد تا فرزندان نمایش داده شوند */}
+                <DeviceListTabs /> 
+              </ProtectedRoute>
+            }
+          >
+            {/* مسیر فرزند برای نمایش جزئیات یک دستگاه */}
+            {/* توجه: مسیر اینجا نسبت به والد سنجیده می‌شود */}
+          <Route
+            path="device/:deviceId"
             element={
-                <ProtectedRoute requiredPermission="acs:view_details">
-                    <DeviceDetailPage />
-                </ProtectedRoute>
-            } 
-        />
+              <DeviceDetailPage />
+              } 
+          />
+        </Route>
 
       </Route>
     </Routes>

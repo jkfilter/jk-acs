@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @font-face {
   font-family: 'Vazirmatn';
   src: url('assets/fonts/Vazirmatn[wght].woff2') format('woff2 supports variations'),

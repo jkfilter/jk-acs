@@ -1,4 +1,4 @@
-//#DeviceList.jsx
+//#/pages/DeviceList.jsx
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/axiosConfig';
 import DeviceDetailPage from './DeviceDetailPage';

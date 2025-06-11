@@ -1,8 +1,9 @@
-//#DeviceDetailPage.jsx
+//#/pages/DeviceDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/axiosConfig';
 import { Info, Wifi, Globe, Settings, CirclePower } from 'lucide-react';
 import DeviceDetailTabs from './DeviceDetailTabs';
+import TaskHistory from '../components/TaskHistory';
 import { getVal, getHostnameFromUrl, formatTimeAgo, isOnline, isoTimeToJalali, safeLogStringify } from '../utils/common';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
@@ -13,57 +14,67 @@ const DeviceDetailPage = ({ deviceId, refreshKey }) => {
     const [device, setDevice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [taskRefreshKey, setTaskRefreshKey] = useState(0);
 
 
-    const handleChangeWifiPassword = async () => {
-        if (!device?._deviceId?._SerialNumber) {
-            Swal.fire({
-                icon: 'error',
-                title: 'سریال نامبر دستگاه موجود نیست!',
-            });
-            return;
-        }
+const handleChangeWifiPassword = async () => {
+    if (!device?._deviceId?._SerialNumber) {
+        Swal.fire({
+            icon: 'error',
+            title: 'سریال نامبر دستگاه موجود نیست!',
+        });
+        return;
+    }
 
-        const { value: password } = await MySwal.fire({
-            title: 'تغییر رمز وای‌فای',
-            input: 'text',
-            inputLabel: 'رمز جدید وای‌فای را وارد کنید:',
-            inputPlaceholder: 'رمز وای‌فای',
-            confirmButtonText: 'ارسال',
-            confirmButtonColor: '#00c950',
-            showCancelButton: true,
-            cancelButtonText: 'انصراف',
-            cancelButtonColor: '#51a2ff',
-            inputValidator: (value) => {
-                if (!value) return 'رمز نمی‌تواند خالی باشد!';
-                if (value.length < 8) return 'رمز باید حداقل ۸ کاراکتر باشد!';
-            },
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            showLoaderOnConfirm: true,
-            preConfirm: async (newPass) => {
-                Swal.resetValidationMessage();
-                try {
-                    const res = await apiClient.post('/acs/wifi-password', {
-                        deviceId: device._id,
-                        newPassword: newPass,
-                    });
-                    return res.data;
-                } catch (err) {
-                    Swal.showValidationMessage(`خطا: ${err?.response?.data?.detail || err.message}`);
-                }
-            },
+    const { value: newPassword } = await MySwal.fire({
+        title: 'تغییر رمز وای‌فای',
+        input: 'text',
+        inputLabel: 'رمز جدید وای‌فای را وارد کنید:',
+        inputPlaceholder: 'رمز وای‌فای',
+        confirmButtonText: 'ارسال',
+        confirmButtonColor: '#00c950',
+        showCancelButton: true,
+        cancelButtonText: 'انصراف',
+        cancelButtonColor: '#51a2ff',
+        inputValidator: (value) => {
+            if (!value) return 'رمز نمی‌تواند خالی باشد!';
+            if (value.length < 8) return 'رمز باید حداقل ۸ کاراکتر باشد!';
+        },
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showLoaderOnConfirm: true,
+        preConfirm: async (value) => {
+            try {
+                const response = await apiClient.post('/acs/tasks/change-wifi-password', {
+                    deviceId: device._id,
+                    newPassword: value,
+                });
+                return response.data;
+            } catch (error) {
+                Swal.showValidationMessage(
+                    `خطا در ارسال دستور: ${error?.response?.data?.detail || error.message}`
+                );
+            }
+        },
+    });
+
+    if (newPassword) {
+        Swal.fire({
+            icon: 'success',
+            title: 'دستور ارسال شد!',
+            html: `
+                رمز جدید در صف اجرا قرار گرفت.<br />
+                پس از ارتباط بعدی مودم با سرور، اعمال خواهد شد.
+            `,
+            timer: 3000,
+            showConfirmButton: false,
         });
 
-        if (password) {
-            Swal.fire({
-            icon: 'success',
-            title: 'رمز وای‌فای با موفقیت تغییر کرد!',
-            timer: 2500,
-            showConfirmButton: false,
-            });
-        }
-    };
+        // ریفرش تسک‌ها
+        setTaskRefreshKey(prev => prev + 1);
+    }
+};
+
 
 
 useEffect(() => {
@@ -176,6 +187,8 @@ useEffect(() => {
                 </div>
             </div>
             
+            <TaskHistory deviceId={deviceId} refreshKey={taskRefreshKey} />
+
             {device && <DeviceDetailTabs device={device} />}
 
 

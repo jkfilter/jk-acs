@@ -1,4 +1,4 @@
-// src/components/ProtectedRoute.jsx
+// #/components/ProtectedRoute.jsx
 console.log("!!!!!!!!!! PROTECTED ROUTE FILE PARSED BY VITE !!!!!!!!!!"); // لاگ ۱: در سطح ماژول
 
 import React from 'react';

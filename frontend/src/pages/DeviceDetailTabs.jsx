@@ -1,3 +1,4 @@
+//#/pages/DeviceDetailTabs.jsx
 import { useState } from 'react';
 
 const TABS = [

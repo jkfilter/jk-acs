@@ -20,8 +20,8 @@ async def get_all_devices_from_acs() -> List[Dict[str, Any]]:
 
 
 
-        with open(DATA_PATH_All, "r", encoding="utf-8") as f:
-            return json.load(f)
+    #    with open(DATA_PATH_All, "r", encoding="utf-8") as f:
+    #        return json.load(f)
 
 
 
@@ -68,8 +68,8 @@ async def get_device_details_from_acs(device_id: str) -> Dict[str, Any]:
 
 
 
-        with open(DATA_PATH_MODEM1, "r", encoding="utf-8") as g:
-            return json.load(g)
+     #   with open(DATA_PATH_MODEM1, "r", encoding="utf-8") as g:
+     #      return json.load(g)
         
 
 
@@ -80,7 +80,7 @@ async def get_device_details_from_acs(device_id: str) -> Dict[str, Any]:
         query = f'{{"_id": "{device_id}"}}'
         encoded_query = quote(query)
         
-        url = f"{settings.ACSServer_url}/devices/?query={encoded_query}"
+        url = f"{settings.ACSSERVER_URL}/devices/?query={encoded_query}"
         
         response = await client.get(url, timeout=3.0)
         response.raise_for_status()
@@ -110,4 +110,50 @@ async def get_device_details_from_acs(device_id: str) -> Dict[str, Any]:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Could not connect to ACSServer service: {e}"
+        )
+    
+    
+
+async def create_genieacs_task(device_id: str, task_payload: Dict[str, Any]) -> str:
+    """ یک تسک جدید برای یک دستگاه در GenieACS ایجاد می‌کند. """
+    url = f"{settings.ACSSERVER_URL}/devices/{device_id}/tasks"
+    try:
+        response = await client.post(url, json=task_payload, timeout=10.0)
+        response.raise_for_status()
+        
+        data = response.json()
+        genieacs_task_id = data.get("_id")
+        if not genieacs_task_id:
+            raise HTTPException(status_code=500, detail="GenieACS did not return a task ID in the response body.")
+        
+        return genieacs_task_id  # ← اکنون از body استخراج می‌شود
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error from GenieACS API: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Could not connect to GenieACS service: {e}"
+        )
+
+
+    
+async def delete_genieacs_task(device_id: str, genieacs_task_id: str):
+    """ یک تسک را از صف GenieACS حذف می‌کند. """
+    url = f"{settings.ACSSERVER_URL}/devices/{device_id}/tasks/{genieacs_task_id}"
+    try:
+        response = await client.delete(url, timeout=5.0)
+        response.raise_for_status()
+        return True
+    except httpx.HTTPStatusError as e:
+                raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error from GenieACS API: {e.response.text}"
+        )
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Could not connect to GenieACS service: {e}"
         )
